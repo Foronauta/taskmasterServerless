@@ -850,7 +850,7 @@ function App() {
           required
         />
 
-        <label>Mensaje de voz (o)pcional)</label>
+        <label>Mensaje de voz (opcional)</label>
         <div className="audio-recorder">
           {!recording && (
             <button type="button" onClick={startRecording}>Grabar audio</button>
