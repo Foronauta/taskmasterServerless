@@ -9,8 +9,3 @@ confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 disable_rollback = true
 image_repositories = []
-parameter_overrides = [
-    "CertificateArn=arn:aws:acm:us-east-1:482289080888:certificate/b7dc6fe0-c1d4-48eb-a283-60f3bfe41b73",
-    "HostedZoneId=Z058517521ANQ7YDMV0NZ",
-    "DomainName=grafica.acrylar.com"
-]

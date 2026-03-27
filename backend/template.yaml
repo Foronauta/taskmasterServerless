@@ -1,24 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Serverless Task Manager with S3 + CloudFront
-
-Parameters:
-  CertificateArn:
-    Type: String
-    Default: ""
-    Description: "ACM Certificate ARN for grafica.acrylar.com (must be in us-east-1 for CloudFront)"
-  HostedZoneId:
-    Type: String
-    Default: ""
-    Description: "Route53 HostedZoneId that manages acrylar.com domain"
-  DomainName:
-    Type: String
-    Default: "grafica.acrylar.com"
-    Description: "Domain to use for CloudFront distribution"
-
-Conditions:
-  HasCertificate: !Not [!Equals [!Ref CertificateArn, ""]]
-  HasHostedZone: !Not [!Equals [!Ref HostedZoneId, ""]]
+Description: Serverless Task Manager backend
 
 Globals:
   Function:
@@ -28,7 +10,7 @@ Globals:
     Environment:
       Variables:
         TASKS_TABLE: !Ref TasksTable
-        SES_FROM_ADDRESS: "no-reply@example.com"  # CAMBIAR después del deploy
+        SES_FROM_ADDRESS: "no-responder@acrylar.com"  # CAMBIAR después del deploy
 
 Resources:
   TaskApi:
@@ -185,7 +167,7 @@ Resources:
             Resource: "*"
       Environment:
         Variables:
-          SENDER_EMAIL: "pablofmoli@gmail.com"
+          SENDER_EMAIL: "no-responder@acrylar.com"
           RECIPIENT_EMAIL: "natu.brunsteins@gmail.com"
       Events:
         DynamoDBStream:
@@ -194,113 +176,8 @@ Resources:
             Stream: !GetAtt TasksTable.StreamArn
             StartingPosition: LATEST
 
-  # S3 bucket to host the frontend static files
-  FrontendBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: appgrafica-acrylar
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        IgnorePublicAcls: true
-        BlockPublicPolicy: true
-        RestrictPublicBuckets: true
-
-  # CloudFront Origin Access Identity
-  CloudFrontOriginAccessIdentity:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
-    Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: "OAI for TaskMaster frontend CloudFront distribution"
-
-  # S3 Bucket Policy to allow CloudFront access
-  FrontendBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref FrontendBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AllowCloudFrontGetObject
-            Effect: Allow
-            Principal:
-              CanonicalUser: !GetAtt CloudFrontOriginAccessIdentity.S3CanonicalUserId
-            Action: "s3:GetObject"
-            Resource: !Sub "${FrontendBucket.Arn}/*"
-
-  # CloudFront Distribution
-  WebDistribution:
-    Type: AWS::CloudFront::Distribution
-    Condition: HasCertificate
-    Properties:
-      DistributionConfig:
-        Enabled: true
-        DefaultRootObject: index.html
-        Origins:
-          - Id: FrontendS3Origin
-            DomainName: !GetAtt FrontendBucket.RegionalDomainName
-            S3OriginConfig:
-              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}"
-        DefaultCacheBehavior:
-          TargetOriginId: FrontendS3Origin
-          ViewerProtocolPolicy: redirect-to-https
-          AllowedMethods:
-            - GET
-            - HEAD
-            - OPTIONS
-          CachedMethods:
-            - GET
-            - HEAD
-          ForwardedValues:
-            QueryString: false
-            Cookies:
-              Forward: none
-          Compress: true
-        ViewerCertificate:
-          AcmCertificateArn: !Ref CertificateArn
-          SslSupportMethod: sni-only
-          MinimumProtocolVersion: TLSv1.2_2021
-        Aliases:
-          - !Ref DomainName
-        PriceClass: PriceClass_100
-        CustomErrorResponses:
-          - ErrorCode: 404
-            ResponseCode: 200
-            ResponsePagePath: /index.html
-          - ErrorCode: 403
-            ResponseCode: 200
-            ResponsePagePath: /index.html
-
-  # Route53 DNS Record
-  FrontendDNSRecord:
-    Type: AWS::Route53::RecordSet
-    Condition: HasHostedZone
-    Properties:
-      HostedZoneId: !Ref HostedZoneId
-      Name: !Ref DomainName
-      Type: A
-      AliasTarget:
-        DNSName: !GetAtt WebDistribution.DomainName
-        HostedZoneId: Z2FDTNDATAQYW2   # CloudFront Hosted Zone ID (global constant)
-        EvaluateTargetHealth: false
-
 
 Outputs:
   ApiUrl:
     Description: "API endpoint"
     Value: !Sub "https://${TaskApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
-  
-  FrontendBucketName:
-    Description: "Frontend S3 bucket name"
-    Value: !Ref FrontendBucket
-  
-  CloudFrontDistributionId:
-    Description: "CloudFront distribution ID"
-    Value: !If [HasCertificate, !Ref WebDistribution, ""]
-  
-  CloudFrontDomainName:
-    Description: "CloudFront distribution domain name"
-    Value: !If [HasCertificate, !GetAtt WebDistribution.DomainName, ""]
-  
-  WebsiteURL:
-    Description: "Website URL"
-    Value: !If [HasCertificate, !Sub "https://${DomainName}", ""]

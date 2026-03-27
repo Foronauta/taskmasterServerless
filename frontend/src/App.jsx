@@ -33,6 +33,25 @@ const FIELD_LABELS = {
   message: 'Instrucción',
 }
 
+const getTaskPieceType = (task) => {
+  if (task?.pieceType) {
+    return task.pieceType
+  }
+
+  if (task?.formData?.pieceType) {
+    return task.formData.pieceType
+  }
+
+  if (typeof task?.notes === 'string') {
+    const match = task.notes.match(/Tipo de pieza:\s*(.+)/i)
+    if (match?.[1]) {
+      return match[1].split('\n')[0].trim()
+    }
+  }
+
+  return 'Pedido'
+}
+
 function App() {
   const [tasks, setTasks] = useState([])
   const [fullName, setFullName] = useState('')
@@ -868,6 +887,7 @@ function App() {
           <h2 className="tasks-section-title">Pedidos enviados</h2>
           <ul className="task-list">
             {tasks.map(task => {
+              const taskPieceType = getTaskPieceType(task)
               const conditionalData = task.conditionalData && typeof task.conditionalData === 'object'
                 ? task.conditionalData : {}
               const channels = Array.isArray(task.channels) ? task.channels : []
@@ -886,7 +906,7 @@ function App() {
 
                   {/* ── Header ── */}
                   <div className="tc-header">
-                    <span className="tc-piece-type">{task.pieceType || 'Pedido'}</span>
+                    <span className="tc-piece-type">{taskPieceType}</span>
                     <span className={`tc-priority tc-priority-${(task.priority || 'normal').toLowerCase().replace(/\s+/g, '-')}`}>
                       {task.priority || 'Normal'}
                     </span>
@@ -896,6 +916,10 @@ function App() {
 
                   {/* ── Info base ── */}
                   <div className="tc-body">
+                    <div className="tc-row">
+                      <span className="tc-label">Tipo de pieza</span>
+                      <span className="tc-value">{taskPieceType}</span>
+                    </div>
                     {task.responsible && (
                       <div className="tc-row">
                         <span className="tc-label">Solicitante</span>
