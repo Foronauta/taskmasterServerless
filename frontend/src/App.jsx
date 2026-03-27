@@ -70,6 +70,7 @@ function App() {
   const [audioPreviewUrl, setAudioPreviewUrl] = useState('')
   const [recordingSeconds, setRecordingSeconds] = useState(0)
   const [toast, setToast] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [flyerData, setFlyerData] = useState({
     title: '',
     journeyType: '',
@@ -288,6 +289,10 @@ function App() {
   }
 
   const addTask = async () => {
+    if (isSubmitting) {
+      return
+    }
+
     if (!fullName || !pieceType || !generalDescription || !userAction || !dueDate) {
       alert('Completá todos los campos obligatorios para continuar.')
       return
@@ -308,96 +313,108 @@ function App() {
       return
     }
 
-    const fileUrls = []
-    if (files && files.length > 0) {
-      for (let file of files) {
-        const url = await uploadFile(file)
-        fileUrls.push(url)
+    setIsSubmitting(true)
+
+    try {
+      const fileUrls = []
+      if (files && files.length > 0) {
+        for (const file of files) {
+          const url = await uploadFile(file)
+          fileUrls.push(url)
+        }
       }
-    }
 
-    let audioUrl = ''
-    if (audioBlob) {
-      const extension = audioBlob.type.includes('ogg') ? 'ogg' : 'webm'
-      const audioFile = new File([audioBlob], `nota-voz-${Date.now()}.${extension}`, {
-        type: audioBlob.type || 'audio/webm'
+      let audioUrl = ''
+      if (audioBlob) {
+        const extension = audioBlob.type.includes('ogg') ? 'ogg' : 'webm'
+        const audioFile = new File([audioBlob], `nota-voz-${Date.now()}.${extension}`, {
+          type: audioBlob.type || 'audio/webm'
+        })
+        audioUrl = await uploadFile(audioFile)
+      }
+
+      const summary = `${pieceType} - ${generalDescription.slice(0, 120)}`
+      const conditionalData = getConditionalDetails()
+      const formData = {
+        fullName,
+        area,
+        dueDate,
+        priority,
+        pieceType,
+        channels,
+        generalDescription,
+        userAction,
+        additionalComments,
+        conditionalData
+      }
+
+      const taskData = {
+        description: summary,
+        responsible: fullName,
+        area,
+        dueDate,
+        priority,
+        pieceType,
+        channels,
+        generalDescription,
+        userAction,
+        additionalComments,
+        conditionalData,
+        formData,
+        notes: formatNotes(),
+        completed: false,
+        files: fileUrls,
+        audio: audioUrl
+      }
+
+      const response = await fetch(`${API_URL}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskData)
       })
-      audioUrl = await uploadFile(audioFile)
+
+      if (!response.ok) {
+        throw new Error('No se pudo crear el pedido.')
+      }
+
+      setFullName('')
+      setArea('')
+      setDueDate('')
+      setPriority('Normal')
+      setPieceType('')
+      setChannels([])
+      setGeneralDescription('')
+      setUserAction('')
+      setAdditionalComments('')
+      setFiles([])
+      clearRecording()
+      setFlyerData({
+        title: '',
+        journeyType: '',
+        date: '',
+        speakers: '',
+        modality: '',
+        place: '',
+        schedule: '',
+        featuredProduct: '',
+        brands: ''
+      })
+      setCarruselData({ topic: '', slidesCount: '', mandatoryTexts: '' })
+      setPromocionData({ product: '', keyFeatures: '', price: '', validity: '' })
+      setVideoData({ topic: '', format: '', estimatedDuration: '', mainMessage: '' })
+      setFotosData({ event: '', date: '', place: '' })
+      setGraficasStandData({ event: '', dimensions: '', brand: '', highlightedContent: '' })
+      setBannerData({ measure: '', format: '', brand: '', content: '' })
+      setOtroData({ detailedRequest: '' })
+
+      fetchTasks()
+      setToast(true)
+      setTimeout(() => setToast(false), 4000)
+    } catch (error) {
+      alert(error.message || 'Ocurrió un error al enviar el pedido. Intentá nuevamente.')
+    } finally {
+      setIsSubmitting(false)
     }
-
-    const summary = `${pieceType} - ${generalDescription.slice(0, 120)}`
-    const conditionalData = getConditionalDetails()
-    const formData = {
-      fullName,
-      area,
-      dueDate,
-      priority,
-      pieceType,
-      channels,
-      generalDescription,
-      userAction,
-      additionalComments,
-      conditionalData
-    }
-
-    const taskData = {
-      description: summary,
-      responsible: fullName,
-      area,
-      dueDate,
-      priority,
-      pieceType,
-      channels,
-      generalDescription,
-      userAction,
-      additionalComments,
-      conditionalData,
-      formData,
-      notes: formatNotes(),
-      completed: false,
-      files: fileUrls,
-      audio: audioUrl
-    }
-
-    await fetch(`${API_URL}/tasks`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(taskData)
-    })
-
-    setFullName('')
-    setArea('')
-    setDueDate('')
-    setPriority('Normal')
-    setPieceType('')
-    setChannels([])
-    setGeneralDescription('')
-    setUserAction('')
-    setAdditionalComments('')
-    setFiles([])
-    clearRecording()
-    setFlyerData({
-      title: '',
-      journeyType: '',
-      date: '',
-      speakers: '',
-      modality: '',
-      place: '',
-      schedule: '',
-      featuredProduct: '',
-      brands: ''
-    })
-    setCarruselData({ topic: '', slidesCount: '', mandatoryTexts: '' })
-    setPromocionData({ product: '', keyFeatures: '', price: '', validity: '' })
-    setVideoData({ topic: '', format: '', estimatedDuration: '', mainMessage: '' })
-    setFotosData({ event: '', date: '', place: '' })
-    setGraficasStandData({ event: '', dimensions: '', brand: '', highlightedContent: '' })
-    setBannerData({ measure: '', format: '', brand: '', content: '' })
-    setOtroData({ detailedRequest: '' })
-
-    fetchTasks()
-    setToast(true)
-    setTimeout(() => setToast(false), 4000)
   }
 
   const completeTask = async (id) => {
@@ -458,7 +475,7 @@ function App() {
         </div>
       </header>
 
-      <form className="task-form" onSubmit={(e) => { e.preventDefault(); addTask(); }}>
+      <form className={`task-form${isSubmitting ? ' is-submitting' : ''}`} onSubmit={(e) => { e.preventDefault(); addTask(); }}>
         <h2>SECCIÓN 1 — Datos generales</h2>
 
         <label htmlFor="fullName">1. Nombre y apellido</label>
@@ -878,7 +895,9 @@ function App() {
         />
 
         <div style={{ marginTop: 8 }}>
-          <button type="submit">Enviar pedido</button>
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Enviando pedido...' : 'Enviar pedido'}
+          </button>
         </div>
       </form>
 

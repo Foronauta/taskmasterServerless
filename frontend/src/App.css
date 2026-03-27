@@ -147,6 +147,19 @@ body {
   background: #0852a1;
 }
 
+.task-form.is-submitting {
+  opacity: 0.88;
+}
+
+.task-form button:disabled {
+  background: #8aa8cc;
+  cursor: wait;
+}
+
+.task-form button:disabled:hover {
+  background: #8aa8cc;
+}
+
 .audio-recorder {
   display: flex;
   gap: 8px;
