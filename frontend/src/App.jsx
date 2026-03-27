@@ -15,6 +15,10 @@ function App() {
   const [userAction, setUserAction] = useState('')
   const [additionalComments, setAdditionalComments] = useState('')
   const [files, setFiles] = useState([])
+  const [recording, setRecording] = useState(false)
+  const [mediaRecorder, setMediaRecorder] = useState(null)
+  const [audioBlob, setAudioBlob] = useState(null)
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState('')
   const [flyerData, setFlyerData] = useState({
     title: '',
     journeyType: '',
@@ -97,6 +101,60 @@ function App() {
     })
 
     return fileUrl
+  }
+
+  const startRecording = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('La grabación de audio no es compatible con este navegador.')
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new window.MediaRecorder(stream)
+      const chunks = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          chunks.push(e.data)
+        }
+      }
+
+      recorder.onstop = () => {
+        const mimeType = recorder.mimeType || 'audio/webm'
+        const blob = new Blob(chunks, { type: mimeType })
+        setAudioBlob(blob)
+        const nextUrl = URL.createObjectURL(blob)
+        if (audioPreviewUrl) {
+          URL.revokeObjectURL(audioPreviewUrl)
+        }
+        setAudioPreviewUrl(nextUrl)
+
+        stream.getTracks().forEach((track) => track.stop())
+      }
+
+      recorder.start()
+      setMediaRecorder(recorder)
+      setRecording(true)
+    } catch (err) {
+      console.error('Error al iniciar grabación:', err)
+      alert('No se pudo acceder al micrófono. Revisá los permisos del navegador.')
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop()
+    }
+    setRecording(false)
+  }
+
+  const clearRecording = () => {
+    setAudioBlob(null)
+    if (audioPreviewUrl) {
+      URL.revokeObjectURL(audioPreviewUrl)
+      setAudioPreviewUrl('')
+    }
   }
 
   const handleChannelChange = (channel) => {
@@ -188,6 +246,15 @@ function App() {
       }
     }
 
+    let audioUrl = ''
+    if (audioBlob) {
+      const extension = audioBlob.type.includes('ogg') ? 'ogg' : 'webm'
+      const audioFile = new File([audioBlob], `nota-voz-${Date.now()}.${extension}`, {
+        type: audioBlob.type || 'audio/webm'
+      })
+      audioUrl = await uploadFile(audioFile)
+    }
+
     const summary = `${pieceType} - ${generalDescription.slice(0, 120)}`
     const conditionalData = getConditionalDetails()
     const formData = {
@@ -218,7 +285,8 @@ function App() {
       formData,
       notes: formatNotes(),
       completed: false,
-      files: fileUrls
+      files: fileUrls,
+      audio: audioUrl
     }
 
     await fetch(`${API_URL}/tasks`, {
@@ -237,6 +305,7 @@ function App() {
     setUserAction('')
     setAdditionalComments('')
     setFiles([])
+    clearRecording()
     setFlyerData({
       title: '',
       journeyType: '',
@@ -281,12 +350,20 @@ function App() {
     fetchTasks()
   }, [])
 
+  useEffect(() => {
+    return () => {
+      if (audioPreviewUrl) {
+        URL.revokeObjectURL(audioPreviewUrl)
+      }
+    }
+  }, [audioPreviewUrl])
+
   return (
     <div className="app-container">
       <header className="app-header">
         <div className="title-wrap">
           <img src="/logo.png" alt="TaskMaster Logo" className="logo" />
-          <h1>Pedido de piezas de Diseño / Contenido</h1>
+          <h1>Pedido de piezas de diseño / contenido</h1>
         </div>
       </header>
 
@@ -680,6 +757,22 @@ function App() {
           onChange={(e) => setFiles(Array.from(e.target.files))}
           required
         />
+
+        <label>Mensaje de voz opcional</label>
+        <div className="audio-recorder">
+          {!recording && (
+            <button type="button" onClick={startRecording}>Grabar audio</button>
+          )}
+          {recording && (
+            <button type="button" onClick={stopRecording}>Detener</button>
+          )}
+          {audioPreviewUrl && (
+            <>
+              <audio controls src={audioPreviewUrl} />
+              <button type="button" className="secondary-btn" onClick={clearRecording}>Eliminar audio</button>
+            </>
+          )}
+        </div>
 
         <label htmlFor="additionalComments">10. Comentarios adicionales (opcional)</label>
         <textarea

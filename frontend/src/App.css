@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   font-family: 'Montserrat', Arial, sans-serif;
   background: linear-gradient(145deg, #f3f6ff 0%, #eef4f8 45%, #f7fafc 100%);
@@ -53,6 +57,13 @@ body {
   border: 1px solid #d4dde8;
   border-radius: 8px;
   font: inherit;
+}
+
+.task-form input:not([type='checkbox']):not([type='radio']),
+.task-form textarea,
+.task-form select {
+  width: 100%;
+  max-width: 100%;
 }
 
 .task-form label,
@@ -117,6 +128,26 @@ body {
   background: #0852a1;
 }
 
+.audio-recorder {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.audio-recorder audio {
+  width: 100%;
+  max-width: 360px;
+}
+
+.task-form button.secondary-btn {
+  background: #6b7e96;
+}
+
+.task-form button.secondary-btn:hover {
+  background: #55677e;
+}
+
 .task-list {
   list-style: none;
   padding: 0;
@@ -158,10 +189,20 @@ body {
 
   .task-form {
     padding: 14px;
+    overflow: hidden;
   }
 
   .task-form fieldset {
     flex-direction: column;
     gap: 8px;
+  }
+
+  .audio-recorder {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .audio-recorder audio {
+    max-width: 100%;
   }
 }

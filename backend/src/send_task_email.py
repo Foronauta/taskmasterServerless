@@ -146,6 +146,9 @@ def handler(event, context):
             due_date = _safe_str(task.get("dueDate")) or _safe_str(task.get("due_date"))
             notes = _safe_str(task.get("notes"))
             file_urls = _safe_list(task.get("files"))
+            audio_url = _safe_str(task.get("audio"))
+            if audio_url and audio_url not in file_urls:
+                file_urls.append(audio_url)
 
             html_parts = [
                 "<h2>Nueva tarea creada</h2>",
