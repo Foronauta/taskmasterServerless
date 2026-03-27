@@ -1,49 +1,110 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
 body {
   font-family: 'Montserrat', Arial, sans-serif;
-  background-color: #f4f6f8;
+  background: linear-gradient(145deg, #f3f6ff 0%, #eef4f8 45%, #f7fafc 100%);
   margin: 0;
   padding: 0;
 }
 
 .app-container {
-  max-width: 900px;
+  max-width: 980px;
   margin: auto;
-  padding: 20px;
+  padding: 24px;
 }
 
 .app-header {
+  margin-bottom: 24px;
+}
+
+.title-wrap {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 15px;
-  justify-content: center;
-  margin-bottom: 30px;
+  text-align: center;
+  gap: 8px;
+}
+
+.title-wrap h1 {
+  margin: 0;
+  color: #183153;
+  font-size: 1.6rem;
 }
 
 .logo {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
 }
 
 .task-form {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   background: #ffffff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-  margin-bottom: 25px;
+  padding: 22px;
+  border-radius: 14px;
+  box-shadow: 0 8px 26px rgba(24, 49, 83, 0.08);
+  margin-bottom: 24px;
 }
 
 .task-form input,
-.task-form textarea {
+.task-form textarea,
+.task-form select {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #d4dde8;
   border-radius: 8px;
+  font: inherit;
+}
+
+.task-form label,
+.task-form legend {
+  font-weight: 700;
+  color: #1f2f46;
+}
+
+.task-form h2 {
+  margin: 12px 0 4px;
+  font-size: 1rem;
+  color: #1f4f8f;
+}
+
+.task-form h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #274b75;
+}
+
+.task-form small {
+  color: #415d7d;
+}
+
+.task-form fieldset {
+  border: 1px solid #dbe5f1;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inline-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.conditional-section {
+  display: grid;
+  gap: 8px;
+  background: #f7fbff;
+  border: 1px solid #dde8f3;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 4px 0 8px;
 }
 
 .task-form button {
-  background: #0070f3;
+  background: #0b69d1;
   color: white;
   padding: 12px;
   border: none;
@@ -53,7 +114,7 @@ body {
 }
 
 .task-form button:hover {
-  background: #0059c9;
+  background: #0852a1;
 }
 
 .task-list {
@@ -88,4 +149,19 @@ body {
 
 .task-card button:hover {
   background: #218838;
+}
+
+@media (max-width: 640px) {
+  .app-container {
+    padding: 12px;
+  }
+
+  .task-form {
+    padding: 14px;
+  }
+
+  .task-form fieldset {
+    flex-direction: column;
+    gap: 8px;
+  }
 }

@@ -1,0 +1,162 @@
+Pedido de piezas de Diseño / Contenido
+________________________________
+
+SECCIÓN 1 — Datos generales
+
+1. Nombre y apellido 
+2. Área / sector 
+
+3. Fecha de entrega solicitada (fecha)
+Validación: mínimo 3 días hábiles desde hoy
+
+4. Prioridad (opción múltiple)
+
+Normal
+Urgente
+
+________________________________
+
+SECCIÓN 2 — Tipo de pedido
+
+5. Tipo de pieza (desplegable)
+
+Flyer
+Programa
+Carrusel
+Promoción
+Video
+Fotos
+Gráficas Stand
+Banner
+Otro
+
+______________________________
+
+SECCIONES CONDICIONALES
+
+________________________________
+
+SI ELIGE: FLYER
+
+Título
+Tipo de jornada
+Fecha
+Disertante/s (nombre completo)
+Modalidad (presencial/online)
+Lugar
+Horario
+
+Opcional:
+
+Producto a destacar
+Marcas a incluir
+
+________________________________
+
+SI ELIGE: PROGRAMA
+
+Mensaje visible:
+“Adjuntar documento con el programa completo del evento (temario, agenda, disertantes, etc.)”
+
+Campo:
+
+Subida de archivo (obligatorio)
+
+________________________________
+
+SI ELIGE: CARRUSEL
+
+Tema / producto a destacar
+Cantidad de placas
+Textos imprescindibles
+
+Recordatorio: adjuntar imágenes necesarias
+
+________________________________
+
+SI ELIGE: PROMOCIÓN
+
+Producto
+Características a destacar
+Precio
+Vigencia de la oferta
+
+Recordatorio: adjuntar imagenes del producto
+
+________________________________
+
+SI ELIGE: VIDEO
+
+Temática / producto / evento
+Formato (ej: reel, historia, horizontal)
+Duración estimada
+Mensaje principal
+
+Recordatorio: adjuntar material audiovisual
+
+________________________________
+
+SI ELIGE: FOTOS
+
+Evento / producto
+Fecha
+Lugar
+
+________________________________
+
+SI ELIGE: GRÁFICAS STAND
+
+Evento
+Medidas
+Marca
+Contenido / producto a destacar
+
+Mensaje visible:
+“Si son varias gráficas, adjuntar un documento detallando cada una + manual/lineamientos de stand de ser necesario”
+
+________________________________
+
+SI ELIGE: BANNER
+
+Medida
+Formato (PDF, JPEG, PNG, AI, SVG)
+Marca
+Contenido a incluir
+
+________________________________
+
+SI ELIGE: OTRO
+
+Descripción detallada del pedido 
+
+Guía:
+
+Tipo de pieza
+Formato
+Medidas
+Marca/s
+Producto/s
+Objetivo
+
+________________________________
+
+SECCIÓN 3 — Información base (OBLIGATORIA para todos)
+
+6. Canal donde se va a publicar (checkbox)
+
+Instagram
+WhatsApp
+Email
+Web
+Impreso
+Otro
+
+7. Descripción general del pedido (respuesta larga)
+
+8. ¿Qué acción querés que haga el usuario al ver esta pieza?
+Ej: inscribirse, comprar, consultar, etc.
+
+9. Archivos adjuntos (subida de archivos)
+Incluir logos, fotos, textos, referencias, etc.
+
+10. Comentarios adicionales (opcional)

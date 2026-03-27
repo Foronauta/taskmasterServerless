@@ -1,58 +1,83 @@
 import React, { useState, useEffect } from 'react'
-import './App.css'  // 👈 nuevo
+import './App.css'
 
 const API_URL = import.meta.env.VITE_API_URL
 
 function App() {
   const [tasks, setTasks] = useState([])
-  const [description, setDescription] = useState("")
-  const [responsible, setResponsible] = useState("")
-  const [dueDate, setDueDate] = useState("")
-  const [notes, setNotes] = useState("")
+  const [fullName, setFullName] = useState('')
+  const [area, setArea] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const [priority, setPriority] = useState('Normal')
+  const [pieceType, setPieceType] = useState('')
+  const [channels, setChannels] = useState([])
+  const [generalDescription, setGeneralDescription] = useState('')
+  const [userAction, setUserAction] = useState('')
+  const [additionalComments, setAdditionalComments] = useState('')
   const [files, setFiles] = useState([])
-  // Calculate min date (today + 2 days)
-  const minDueDate = (() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 2);
-    return d.toISOString().split('T')[0];
-  })();
+  const [flyerData, setFlyerData] = useState({
+    title: '',
+    journeyType: '',
+    date: '',
+    speakers: '',
+    modality: '',
+    place: '',
+    schedule: '',
+    featuredProduct: '',
+    brands: ''
+  })
+  const [carruselData, setCarruselData] = useState({
+    topic: '',
+    slidesCount: '',
+    mandatoryTexts: ''
+  })
+  const [promocionData, setPromocionData] = useState({
+    product: '',
+    keyFeatures: '',
+    price: '',
+    validity: ''
+  })
+  const [videoData, setVideoData] = useState({
+    topic: '',
+    format: '',
+    estimatedDuration: '',
+    mainMessage: ''
+  })
+  const [fotosData, setFotosData] = useState({
+    event: '',
+    date: '',
+    place: ''
+  })
+  const [graficasStandData, setGraficasStandData] = useState({
+    event: '',
+    dimensions: '',
+    brand: '',
+    highlightedContent: ''
+  })
+  const [bannerData, setBannerData] = useState({
+    measure: '',
+    format: '',
+    brand: '',
+    content: ''
+  })
+  const [otroData, setOtroData] = useState({
+    detailedRequest: ''
+  })
 
-  // Voice recording state
-  const [recording, setRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [audioURL, setAudioURL] = useState(null);
-  const [audioBlob, setAudioBlob] = useState(null);
-
-  // Start recording
-  const startRecording = async () => {
-    if (!navigator.mediaDevices) {
-      alert('La grabación de audio no es compatible con este navegador.');
-      return;
+  const addBusinessDays = (date, businessDays) => {
+    const result = new Date(date)
+    let daysAdded = 0
+    while (daysAdded < businessDays) {
+      result.setDate(result.getDate() + 1)
+      const day = result.getDay()
+      if (day !== 0 && day !== 6) {
+        daysAdded += 1
+      }
     }
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new window.MediaRecorder(stream);
-    let chunks = [];
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunks.push(e.data);
-    };
-    recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: 'audio/webm' });
-      setAudioBlob(blob);
-      setAudioURL(URL.createObjectURL(blob));
-      chunks = [];
-    };
-    recorder.start();
-    setMediaRecorder(recorder);
-    setRecording(true);
-  };
+    return result
+  }
 
-  // Stop recording
-  const stopRecording = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      setRecording(false);
-    }
-  };
+  const minDueDate = addBusinessDays(new Date(), 3).toISOString().split('T')[0]
 
   const fetchTasks = async () => {
     const res = await fetch(`${API_URL}/tasks`)
@@ -60,83 +85,175 @@ function App() {
     setTasks(data)
   }
 
-  // General file upload (image, audio, etc)
   const uploadFile = async (file) => {
-    const fileType = file.type || 'application/octet-stream';
-    const res = await fetch(`${API_URL}/upload-url?filename=${encodeURIComponent(file.name)}&fileType=${encodeURIComponent(fileType)}`);
-    const { uploadUrl, fileUrl } = await res.json();
+    const fileType = file.type || 'application/octet-stream'
+    const res = await fetch(`${API_URL}/upload-url?filename=${encodeURIComponent(file.name)}&fileType=${encodeURIComponent(fileType)}`)
+    const { uploadUrl, fileUrl } = await res.json()
 
     await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": fileType },
+      method: 'PUT',
+      headers: { 'Content-Type': fileType },
       body: file
-    });
+    })
 
-    return fileUrl;
+    return fileUrl
+  }
+
+  const handleChannelChange = (channel) => {
+    setChannels((prev) => {
+      if (prev.includes(channel)) {
+        return prev.filter((item) => item !== channel)
+      }
+      return [...prev, channel]
+    })
+  }
+
+  const getConditionalDetails = () => {
+    switch (pieceType) {
+      case 'Flyer':
+        return flyerData
+      case 'Programa':
+        return {
+          message: 'Adjuntar documento con el programa completo del evento (temario, agenda, disertantes, etc.)'
+        }
+      case 'Carrusel':
+        return carruselData
+      case 'Promoción':
+        return promocionData
+      case 'Video':
+        return videoData
+      case 'Fotos':
+        return fotosData
+      case 'Gráficas Stand':
+        return graficasStandData
+      case 'Banner':
+        return bannerData
+      case 'Otro':
+        return otroData
+      default:
+        return {}
+    }
+  }
+
+  const formatNotes = () => {
+    const lines = [
+      'SECCIÓN 1 — Datos generales',
+      `Área/Sector: ${area}`,
+      `Fecha de entrega solicitada: ${dueDate}`,
+      `Prioridad: ${priority}`,
+      '',
+      'SECCIÓN 2 — Tipo de pedido',
+      `Tipo de pieza: ${pieceType}`,
+      `Detalle condicional: ${JSON.stringify(getConditionalDetails(), null, 2)}`,
+      '',
+      'SECCIÓN 3 — Información base',
+      `Canales: ${channels.join(', ')}`,
+      `Descripción general: ${generalDescription}`,
+      `Acción esperada del usuario: ${userAction}`
+    ]
+
+    if (additionalComments.trim()) {
+      lines.push(`Comentarios adicionales: ${additionalComments}`)
+    }
+
+    return lines.join('\n')
   }
 
   const addTask = async () => {
-    if (!description) return
+    if (!fullName || !pieceType || !generalDescription || !userAction || !dueDate) {
+      alert('Completá todos los campos obligatorios para continuar.')
+      return
+    }
 
-    let fileUrls = [];
+    if (channels.length === 0) {
+      alert('Seleccioná al menos un canal de publicación.')
+      return
+    }
+
+    if (!files || files.length === 0) {
+      alert('Adjuntá al menos un archivo para enviar el pedido.')
+      return
+    }
+
+    if (dueDate < minDueDate) {
+      alert('La fecha de entrega debe tener mínimo 3 días hábiles desde hoy.')
+      return
+    }
+
+    const fileUrls = []
     if (files && files.length > 0) {
       for (let file of files) {
-        const url = await uploadFile(file);
-        fileUrls.push(url);
+        const url = await uploadFile(file)
+        fileUrls.push(url)
       }
     }
 
-    // Upload audio if present
-    let audioUrl = null;
-    if (audioBlob) {
-      const audioFile = new File([audioBlob], `voice-message-${Date.now()}.webm`, { type: 'audio/webm' });
-      audioUrl = await uploadFile(audioFile);
-    }
+    const summary = `${pieceType} - ${generalDescription.slice(0, 120)}`
 
     const taskData = {
-      description,
-      responsible,
+      description: summary,
+      responsible: fullName,
       dueDate,
-      notes,
+      notes: formatNotes(),
       completed: false,
-      files: fileUrls,
-      audio: audioUrl
+      files: fileUrls
     }
 
     await fetch(`${API_URL}/tasks`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(taskData)
     })
 
-    setDescription("")
-    setResponsible("")
-    setDueDate("")
-    setNotes("")
-  setFiles([])
-    setAudioBlob(null)
-    setAudioURL(null)
+    setFullName('')
+    setArea('')
+    setDueDate('')
+    setPriority('Normal')
+    setPieceType('')
+    setChannels([])
+    setGeneralDescription('')
+    setUserAction('')
+    setAdditionalComments('')
+    setFiles([])
+    setFlyerData({
+      title: '',
+      journeyType: '',
+      date: '',
+      speakers: '',
+      modality: '',
+      place: '',
+      schedule: '',
+      featuredProduct: '',
+      brands: ''
+    })
+    setCarruselData({ topic: '', slidesCount: '', mandatoryTexts: '' })
+    setPromocionData({ product: '', keyFeatures: '', price: '', validity: '' })
+    setVideoData({ topic: '', format: '', estimatedDuration: '', mainMessage: '' })
+    setFotosData({ event: '', date: '', place: '' })
+    setGraficasStandData({ event: '', dimensions: '', brand: '', highlightedContent: '' })
+    setBannerData({ measure: '', format: '', brand: '', content: '' })
+    setOtroData({ detailedRequest: '' })
 
     fetchTasks()
   }
 
   const completeTask = async (id) => {
     await fetch(`${API_URL}/tasks/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ completed: true })
-    });
-    fetchTasks();
-  };
+    })
+    fetchTasks()
+  }
 
   const cancelTask = async (id) => {
     await fetch(`${API_URL}/tasks/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ canceled: true })
-    });
-    fetchTasks();
-  };
+    })
+    fetchTasks()
+  }
 
   useEffect(() => {
     fetchTasks()
@@ -145,69 +262,413 @@ function App() {
   return (
     <div className="app-container">
       <header className="app-header">
-        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
-          <img src="/logo.png" alt="TaskMaster Logo" className="logo" style={{marginBottom: 8}} />
-          <h1 style={{margin: 0}}>Pedido de Grafica</h1>
+        <div className="title-wrap">
+          <img src="/logo.png" alt="TaskMaster Logo" className="logo" />
+          <h1>Pedido de piezas de Diseño / Contenido</h1>
         </div>
       </header>
 
       <form className="task-form" onSubmit={(e) => { e.preventDefault(); addTask(); }}>
-        <label for="description">Ingrese la descripcion de la tarea:</label>
+        <h2>SECCIÓN 1 — Datos generales</h2>
+
+        <label htmlFor="fullName">1. Nombre y apellido</label>
         <input
           type="text"
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Descripción de la tarea"
+          id="fullName"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
           required
         />
-        <label for="responsible">Ingrese su nombre:</label>
+
+        <label htmlFor="area">2. Área / sector</label>
         <input
           type="text"
-          id="responsible"
-          value={responsible}
-          onChange={(e) => setResponsible(e.target.value)}
-          placeholder="Nombre"
+          id="area"
+          value={area}
+          onChange={(e) => setArea(e.target.value)}
+          required
         />
-        <label for="date">Ingrese la fecha de vencimiento de la tarea:</label>
+
+        <label htmlFor="dueDate">3. Fecha de entrega solicitada</label>
         <input
           type="date"
-          id="date"
+          id="dueDate"
           value={dueDate}
           min={minDueDate}
           onChange={(e) => setDueDate(e.target.value)}
+          required
         />
-        <label for="notes">Ingrese comentarios adicionales:</label>
+        <small>Mínimo 3 días hábiles desde hoy.</small>
+
+        <fieldset>
+          <legend>4. Prioridad</legend>
+          <label className="inline-option">
+            <input
+              type="radio"
+              name="priority"
+              checked={priority === 'Normal'}
+              onChange={() => setPriority('Normal')}
+            />
+            Normal
+          </label>
+          <label className="inline-option">
+            <input
+              type="radio"
+              name="priority"
+              checked={priority === 'Urgente'}
+              onChange={() => setPriority('Urgente')}
+            />
+            Urgente
+          </label>
+        </fieldset>
+
+        <h2>SECCIÓN 2 — Tipo de pedido</h2>
+
+        <label htmlFor="pieceType">5. Tipo de pieza</label>
+        <select
+          id="pieceType"
+          value={pieceType}
+          onChange={(e) => setPieceType(e.target.value)}
+          required
+        >
+          <option value="">Seleccionar tipo</option>
+          <option value="Flyer">Flyer</option>
+          <option value="Programa">Programa</option>
+          <option value="Carrusel">Carrusel</option>
+          <option value="Promoción">Promoción</option>
+          <option value="Video">Video</option>
+          <option value="Fotos">Fotos</option>
+          <option value="Gráficas Stand">Gráficas Stand</option>
+          <option value="Banner">Banner</option>
+          <option value="Otro">Otro</option>
+        </select>
+
+        {pieceType === 'Flyer' && (
+          <div className="conditional-section">
+            <h3>Campos para Flyer</h3>
+            <input
+              type="text"
+              placeholder="Título"
+              value={flyerData.title}
+              onChange={(e) => setFlyerData({ ...flyerData, title: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Tipo de jornada"
+              value={flyerData.journeyType}
+              onChange={(e) => setFlyerData({ ...flyerData, journeyType: e.target.value })}
+              required
+            />
+            <input
+              type="date"
+              value={flyerData.date}
+              onChange={(e) => setFlyerData({ ...flyerData, date: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Disertante/s"
+              value={flyerData.speakers}
+              onChange={(e) => setFlyerData({ ...flyerData, speakers: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Modalidad (presencial/online)"
+              value={flyerData.modality}
+              onChange={(e) => setFlyerData({ ...flyerData, modality: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Lugar"
+              value={flyerData.place}
+              onChange={(e) => setFlyerData({ ...flyerData, place: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Horario"
+              value={flyerData.schedule}
+              onChange={(e) => setFlyerData({ ...flyerData, schedule: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Producto a destacar (opcional)"
+              value={flyerData.featuredProduct}
+              onChange={(e) => setFlyerData({ ...flyerData, featuredProduct: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Marcas a incluir (opcional)"
+              value={flyerData.brands}
+              onChange={(e) => setFlyerData({ ...flyerData, brands: e.target.value })}
+            />
+          </div>
+        )}
+
+        {pieceType === 'Programa' && (
+          <div className="conditional-section">
+            <h3>Campos para Programa</h3>
+            <p>Adjuntar documento con el programa completo del evento (temario, agenda, disertantes, etc.)</p>
+          </div>
+        )}
+
+        {pieceType === 'Carrusel' && (
+          <div className="conditional-section">
+            <h3>Campos para Carrusel</h3>
+            <input
+              type="text"
+              placeholder="Tema / producto a destacar"
+              value={carruselData.topic}
+              onChange={(e) => setCarruselData({ ...carruselData, topic: e.target.value })}
+              required
+            />
+            <input
+              type="number"
+              placeholder="Cantidad de placas"
+              min="1"
+              value={carruselData.slidesCount}
+              onChange={(e) => setCarruselData({ ...carruselData, slidesCount: e.target.value })}
+              required
+            />
+            <textarea
+              placeholder="Textos imprescindibles"
+              value={carruselData.mandatoryTexts}
+              onChange={(e) => setCarruselData({ ...carruselData, mandatoryTexts: e.target.value })}
+              required
+            />
+            <small>Recordatorio: adjuntar imágenes necesarias.</small>
+          </div>
+        )}
+
+        {pieceType === 'Promoción' && (
+          <div className="conditional-section">
+            <h3>Campos para Promoción</h3>
+            <input
+              type="text"
+              placeholder="Producto"
+              value={promocionData.product}
+              onChange={(e) => setPromocionData({ ...promocionData, product: e.target.value })}
+              required
+            />
+            <textarea
+              placeholder="Características a destacar"
+              value={promocionData.keyFeatures}
+              onChange={(e) => setPromocionData({ ...promocionData, keyFeatures: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Precio"
+              value={promocionData.price}
+              onChange={(e) => setPromocionData({ ...promocionData, price: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Vigencia de la oferta"
+              value={promocionData.validity}
+              onChange={(e) => setPromocionData({ ...promocionData, validity: e.target.value })}
+              required
+            />
+            <small>Recordatorio: adjuntar imágenes del producto.</small>
+          </div>
+        )}
+
+        {pieceType === 'Video' && (
+          <div className="conditional-section">
+            <h3>Campos para Video</h3>
+            <input
+              type="text"
+              placeholder="Temática / producto / evento"
+              value={videoData.topic}
+              onChange={(e) => setVideoData({ ...videoData, topic: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Formato (reel, historia, horizontal)"
+              value={videoData.format}
+              onChange={(e) => setVideoData({ ...videoData, format: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Duración estimada"
+              value={videoData.estimatedDuration}
+              onChange={(e) => setVideoData({ ...videoData, estimatedDuration: e.target.value })}
+              required
+            />
+            <textarea
+              placeholder="Mensaje principal"
+              value={videoData.mainMessage}
+              onChange={(e) => setVideoData({ ...videoData, mainMessage: e.target.value })}
+              required
+            />
+            <small>Recordatorio: adjuntar material audiovisual.</small>
+          </div>
+        )}
+
+        {pieceType === 'Fotos' && (
+          <div className="conditional-section">
+            <h3>Campos para Fotos</h3>
+            <input
+              type="text"
+              placeholder="Evento / producto"
+              value={fotosData.event}
+              onChange={(e) => setFotosData({ ...fotosData, event: e.target.value })}
+              required
+            />
+            <input
+              type="date"
+              value={fotosData.date}
+              onChange={(e) => setFotosData({ ...fotosData, date: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Lugar"
+              value={fotosData.place}
+              onChange={(e) => setFotosData({ ...fotosData, place: e.target.value })}
+              required
+            />
+          </div>
+        )}
+
+        {pieceType === 'Gráficas Stand' && (
+          <div className="conditional-section">
+            <h3>Campos para Gráficas Stand</h3>
+            <input
+              type="text"
+              placeholder="Evento"
+              value={graficasStandData.event}
+              onChange={(e) => setGraficasStandData({ ...graficasStandData, event: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Medidas"
+              value={graficasStandData.dimensions}
+              onChange={(e) => setGraficasStandData({ ...graficasStandData, dimensions: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Marca"
+              value={graficasStandData.brand}
+              onChange={(e) => setGraficasStandData({ ...graficasStandData, brand: e.target.value })}
+              required
+            />
+            <textarea
+              placeholder="Contenido / producto a destacar"
+              value={graficasStandData.highlightedContent}
+              onChange={(e) => setGraficasStandData({ ...graficasStandData, highlightedContent: e.target.value })}
+              required
+            />
+            <small>Si son varias gráficas, adjuntar un documento detallando cada una + manual/lineamientos de stand de ser necesario.</small>
+          </div>
+        )}
+
+        {pieceType === 'Banner' && (
+          <div className="conditional-section">
+            <h3>Campos para Banner</h3>
+            <input
+              type="text"
+              placeholder="Medida"
+              value={bannerData.measure}
+              onChange={(e) => setBannerData({ ...bannerData, measure: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Formato (PDF, JPEG, PNG, AI, SVG)"
+              value={bannerData.format}
+              onChange={(e) => setBannerData({ ...bannerData, format: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Marca"
+              value={bannerData.brand}
+              onChange={(e) => setBannerData({ ...bannerData, brand: e.target.value })}
+              required
+            />
+            <textarea
+              placeholder="Contenido a incluir"
+              value={bannerData.content}
+              onChange={(e) => setBannerData({ ...bannerData, content: e.target.value })}
+              required
+            />
+          </div>
+        )}
+
+        {pieceType === 'Otro' && (
+          <div className="conditional-section">
+            <h3>Campos para Otro</h3>
+            <textarea
+              placeholder="Descripción detallada del pedido (tipo de pieza, formato, medidas, marcas, productos y objetivo)"
+              value={otroData.detailedRequest}
+              onChange={(e) => setOtroData({ detailedRequest: e.target.value })}
+              required
+            />
+          </div>
+        )}
+
+        <h2>SECCIÓN 3 — Información base</h2>
+
+        <fieldset>
+          <legend>6. Canal donde se va a publicar</legend>
+          {['Instagram', 'WhatsApp', 'Email', 'Web', 'Impreso', 'Otro'].map((channel) => (
+            <label key={channel} className="inline-option">
+              <input
+                type="checkbox"
+                checked={channels.includes(channel)}
+                onChange={() => handleChannelChange(channel)}
+              />
+              {channel}
+            </label>
+          ))}
+        </fieldset>
+
+        <label htmlFor="generalDescription">7. Descripción general del pedido</label>
         <textarea
-          value={notes}
-          id="notes"
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Notas adicionales"
+          id="generalDescription"
+          value={generalDescription}
+          onChange={(e) => setGeneralDescription(e.target.value)}
+          required
         />
-        <label for="files">Ingrese archivos adjuntos (documentos o imagenes):</label>
+
+        <label htmlFor="userAction">8. ¿Qué acción querés que haga el usuario al ver esta pieza?</label>
+        <textarea
+          id="userAction"
+          value={userAction}
+          onChange={(e) => setUserAction(e.target.value)}
+          placeholder="Ej: inscribirse, comprar, consultar"
+          required
+        />
+
+        <label htmlFor="files">9. Archivos adjuntos</label>
         <input
           type="file"
           id="files"
           multiple
           onChange={(e) => setFiles(Array.from(e.target.files))}
+          required
         />
 
-        {/* Voice recording UI */}
-        <div style={{ margin: '10px 0' }}>
-          <label>Grabe un mensaje de voz opcional:</label><br />
-          {!recording && (
-            <button type="button" onClick={startRecording} style={{marginRight: 8}}>Grabar</button>
-          )}
-          {recording && (
-            <button type="button" onClick={stopRecording} style={{marginRight: 8}}>Detener</button>
-          )}
-          {audioURL && (
-            <audio src={audioURL} controls style={{ verticalAlign: 'middle', marginLeft: 8 }} />
-          )}
-          <label>(Escuche la grabacion y verifique que sea correcta)</label><br />
-        </div>
+        <label htmlFor="additionalComments">10. Comentarios adicionales (opcional)</label>
+        <textarea
+          id="additionalComments"
+          value={additionalComments}
+          onChange={(e) => setAdditionalComments(e.target.value)}
+        />
 
-        <button type="submit">Agregar Tarea</button>
+        <div style={{ marginTop: 8 }}>
+          <button type="submit">Enviar pedido</button>
+        </div>
       </form>
 
       <ul className="task-list">
@@ -219,9 +680,8 @@ function App() {
               {task.canceled && <span style={{color: 'red', marginLeft: 8}}>(Cancelada)</span>}
             </div>
             {task.responsible && <div>Responsable: {task.responsible}</div>}
-            {task.due_date && <div>Vence: {task.due_date}</div>}
+            {(task.dueDate || task.due_date) && <div>Vence: {task.dueDate || task.due_date}</div>}
             {task.notes && <div>Notas: {task.notes}</div>}
-            {/* Show all attached files */}
             {task.files && Array.isArray(task.files) && task.files.length > 0 && (
               <div>
                 <div>Archivos adjuntos:</div>
@@ -240,7 +700,6 @@ function App() {
                 </ul>
               </div>
             )}
-            {/* Show audio if present and not in files */}
             {task.audio && (!task.files || !task.files.includes(task.audio)) && (
               <div>
                 <div>Mensaje de voz:</div>
