@@ -3,9 +3,17 @@ import boto3
 import os
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(os.environ["TABLE_NAME"])
+
+
+class _DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return int(obj) if obj % 1 == 0 else float(obj)
+        return super().default(obj)
 
 
 def _safe_str(value):
@@ -77,7 +85,7 @@ def handler(event, context):
         return {
             "statusCode": 201,
             "headers": _build_cors_headers(),
-            "body": json.dumps(task_item)
+            "body": json.dumps(task_item, cls=_DecimalEncoder)
         }
     except Exception as e:
         print(f"Error creating task: {e}")

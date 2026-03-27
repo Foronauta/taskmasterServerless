@@ -85,9 +85,14 @@ function App() {
   const minDueDate = addBusinessDays(new Date(), 3).toISOString().split('T')[0]
 
   const fetchTasks = async () => {
-    const res = await fetch(`${API_URL}/tasks`)
-    const data = await res.json()
-    setTasks(data)
+    try {
+      const res = await fetch(`${API_URL}/tasks`)
+      const data = await res.json()
+      setTasks(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error('Error al cargar tareas:', err)
+      setTasks([])
+    }
   }
 
   const uploadFile = async (file) => {
