@@ -64,6 +64,25 @@ body {
 .task-form select {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+}
+
+.task-form input[type='date'] {
+  display: block;
+  background-color: #ffffff;
+  color: #1f2f46;
+  min-height: 42px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.task-form input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.task-form input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.9;
 }
 
 .task-form label,
@@ -140,6 +159,15 @@ body {
   max-width: 360px;
 }
 
+.recording-status {
+  font-weight: 700;
+  color: #bb2b2b;
+  background: #ffe9e9;
+  border: 1px solid #f0b3b3;
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
 .task-form button.secondary-btn {
   background: #6b7e96;
 }
@@ -195,6 +223,14 @@ body {
   .task-form fieldset {
     flex-direction: column;
     gap: 8px;
+  }
+
+  .delivery-date-input,
+  .task-form input[type='date'] {
+    width: 100%;
+    max-width: 100%;
+    font-size: 16px;
+    line-height: 1.2;
   }
 
   .audio-recorder {

@@ -19,6 +19,7 @@ function App() {
   const [mediaRecorder, setMediaRecorder] = useState(null)
   const [audioBlob, setAudioBlob] = useState(null)
   const [audioPreviewUrl, setAudioPreviewUrl] = useState('')
+  const [recordingSeconds, setRecordingSeconds] = useState(0)
   const [flyerData, setFlyerData] = useState({
     title: '',
     journeyType: '',
@@ -110,6 +111,13 @@ function App() {
     }
 
     try {
+      if (audioPreviewUrl) {
+        URL.revokeObjectURL(audioPreviewUrl)
+        setAudioPreviewUrl('')
+      }
+      setAudioBlob(null)
+      setRecordingSeconds(0)
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const recorder = new window.MediaRecorder(stream)
       const chunks = []
@@ -151,10 +159,17 @@ function App() {
 
   const clearRecording = () => {
     setAudioBlob(null)
+    setRecordingSeconds(0)
     if (audioPreviewUrl) {
       URL.revokeObjectURL(audioPreviewUrl)
       setAudioPreviewUrl('')
     }
+  }
+
+  const formatRecordingTime = (seconds) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
   }
 
   const handleChannelChange = (channel) => {
@@ -351,6 +366,20 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (!recording) {
+      return undefined
+    }
+
+    const timerId = window.setInterval(() => {
+      setRecordingSeconds((prev) => prev + 1)
+    }, 1000)
+
+    return () => {
+      window.clearInterval(timerId)
+    }
+  }, [recording])
+
+  useEffect(() => {
     return () => {
       if (audioPreviewUrl) {
         URL.revokeObjectURL(audioPreviewUrl)
@@ -392,6 +421,7 @@ function App() {
         <input
           type="date"
           id="dueDate"
+          className="delivery-date-input"
           value={dueDate}
           min={minDueDate}
           onChange={(e) => setDueDate(e.target.value)}
@@ -758,13 +788,16 @@ function App() {
           required
         />
 
-        <label>Mensaje de voz opcional</label>
+        <label>Mensaje de voz (o)pcional)</label>
         <div className="audio-recorder">
           {!recording && (
             <button type="button" onClick={startRecording}>Grabar audio</button>
           )}
           {recording && (
-            <button type="button" onClick={stopRecording}>Detener</button>
+            <>
+              <button type="button" onClick={stopRecording}>Detener</button>
+              <span className="recording-status">Grabando: {formatRecordingTime(recordingSeconds)}</span>
+            </>
           )}
           {audioPreviewUrl && (
             <>
@@ -773,6 +806,7 @@ function App() {
             </>
           )}
         </div>
+        <small>Asegurate que la grabación sea correcta.</small>
 
         <label htmlFor="additionalComments">10. Comentarios adicionales (opcional)</label>
         <textarea
