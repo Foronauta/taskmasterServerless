@@ -3,6 +3,36 @@ import './App.css'
 
 const API_URL = import.meta.env.VITE_API_URL
 
+const FIELD_LABELS = {
+  title: 'Título',
+  journeyType: 'Tipo de jornada',
+  speakers: 'Disertante/s',
+  modality: 'Modalidad',
+  place: 'Lugar',
+  schedule: 'Horario',
+  featuredProduct: 'Producto a destacar',
+  brands: 'Marcas a incluir',
+  topic: 'Tema / producto a destacar',
+  slidesCount: 'Cantidad de placas',
+  mandatoryTexts: 'Textos imprescindibles',
+  product: 'Producto',
+  keyFeatures: 'Características a destacar',
+  price: 'Precio',
+  validity: 'Vigencia de la oferta',
+  format: 'Formato',
+  estimatedDuration: 'Duración estimada',
+  mainMessage: 'Mensaje principal',
+  event: 'Evento / producto',
+  date: 'Fecha',
+  dimensions: 'Medidas',
+  brand: 'Marca',
+  highlightedContent: 'Contenido / producto a destacar',
+  measure: 'Medida',
+  content: 'Contenido a incluir',
+  detailedRequest: 'Descripción detallada',
+  message: 'Instrucción',
+}
+
 function App() {
   const [tasks, setTasks] = useState([])
   const [fullName, setFullName] = useState('')
@@ -20,6 +50,7 @@ function App() {
   const [audioBlob, setAudioBlob] = useState(null)
   const [audioPreviewUrl, setAudioPreviewUrl] = useState('')
   const [recordingSeconds, setRecordingSeconds] = useState(0)
+  const [toast, setToast] = useState(false)
   const [flyerData, setFlyerData] = useState({
     title: '',
     journeyType: '',
@@ -346,6 +377,8 @@ function App() {
     setOtroData({ detailedRequest: '' })
 
     fetchTasks()
+    setToast(true)
+    setTimeout(() => setToast(false), 4000)
   }
 
   const completeTask = async (id) => {
@@ -394,6 +427,11 @@ function App() {
 
   return (
     <div className="app-container">
+      {toast && (
+        <div className="toast-success" role="status">
+          ✓ El pedido fue creado con éxito
+        </div>
+      )}
       <header className="app-header">
         <div className="title-wrap">
           <img src="/logo.png" alt="TaskMaster Logo" className="logo" />
@@ -825,50 +863,145 @@ function App() {
         </div>
       </form>
 
-      <ul className="task-list">
-        {tasks.map(task => (
-          <li key={task.id} className="task-card">
-            <div>
-              <strong>{task.description}</strong>
-              {task.completed && <span style={{color: 'green', marginLeft: 8}}>(Completada)</span>}
-              {task.canceled && <span style={{color: 'red', marginLeft: 8}}>(Cancelada)</span>}
-            </div>
-            {task.responsible && <div>Responsable: {task.responsible}</div>}
-            {(task.dueDate || task.due_date) && <div>Vence: {task.dueDate || task.due_date}</div>}
-            {task.notes && <div>Notas: {task.notes}</div>}
-            {task.files && Array.isArray(task.files) && task.files.length > 0 && (
-              <div>
-                <div>Archivos adjuntos:</div>
-                <ul>
-                  {task.files.map((url, idx) => (
-                    <li key={idx}>
-                      {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                        <img src={url} alt={`Adjunto ${idx+1}`} style={{maxWidth: 120, maxHeight: 120}} />
-                      ) : url.match(/\.(mp3|wav|ogg|webm)$/i) ? (
-                        <audio src={url} controls />
-                      ) : (
-                        <a href={url} target="_blank" rel="noopener noreferrer">Archivo {idx+1}</a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {task.audio && (!task.files || !task.files.includes(task.audio)) && (
-              <div>
-                <div>Mensaje de voz:</div>
-                <audio src={task.audio} controls />
-              </div>
-            )}
-            {!(task.completed || task.canceled) && (
-              <>
-                <button onClick={() => completeTask(task.id)}>Completar</button>
-                <button onClick={() => cancelTask(task.id)} style={{marginLeft: 8, color: 'red'}}>Cancelar</button>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
+      {tasks.length > 0 && (
+        <section className="tasks-section">
+          <h2 className="tasks-section-title">Pedidos enviados</h2>
+          <ul className="task-list">
+            {tasks.map(task => {
+              const conditionalData = task.conditionalData && typeof task.conditionalData === 'object'
+                ? task.conditionalData : {}
+              const channels = Array.isArray(task.channels) ? task.channels : []
+              const fileUrls = Array.isArray(task.files) ? task.files : []
+              const audioUrl = task.audio && !fileUrls.includes(task.audio) ? task.audio : null
+
+              const images = fileUrls.filter(u => u.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i))
+              const audios = fileUrls.filter(u => u.match(/\.(mp3|wav|ogg|webm|m4a)(\?|$)/i))
+              const otherFiles = fileUrls.filter(u =>
+                !u.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i) &&
+                !u.match(/\.(mp3|wav|ogg|webm|m4a)(\?|$)/i)
+              )
+
+              return (
+                <li key={task.id} className={`task-card${task.completed ? ' tc-done' : ''}${task.canceled ? ' tc-cancelled' : ''}`}>
+
+                  {/* ── Header ── */}
+                  <div className="tc-header">
+                    <span className="tc-piece-type">{task.pieceType || 'Pedido'}</span>
+                    <span className={`tc-priority tc-priority-${(task.priority || 'normal').toLowerCase().replace(/\s+/g, '-')}`}>
+                      {task.priority || 'Normal'}
+                    </span>
+                    {task.completed && <span className="tc-status tc-status-done">✓ Completada</span>}
+                    {task.canceled && <span className="tc-status tc-status-cancelled">✕ Cancelada</span>}
+                  </div>
+
+                  {/* ── Info base ── */}
+                  <div className="tc-body">
+                    {task.responsible && (
+                      <div className="tc-row">
+                        <span className="tc-label">Solicitante</span>
+                        <span className="tc-value">{task.responsible}</span>
+                      </div>
+                    )}
+                    {task.area && (
+                      <div className="tc-row">
+                        <span className="tc-label">Área / Sector</span>
+                        <span className="tc-value">{task.area}</span>
+                      </div>
+                    )}
+                    {(task.dueDate || task.due_date) && (
+                      <div className="tc-row">
+                        <span className="tc-label">Fecha solicitada</span>
+                        <span className="tc-value">{task.dueDate || task.due_date}</span>
+                      </div>
+                    )}
+                    {channels.length > 0 && (
+                      <div className="tc-row">
+                        <span className="tc-label">Canales</span>
+                        <span className="tc-chips">
+                          {channels.map(c => <span key={c} className="tc-chip">{c}</span>)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* ── Datos condicionales ── */}
+                    {Object.entries(conditionalData).filter(([, v]) => v).map(([k, v]) => (
+                      <div key={k} className="tc-row">
+                        <span className="tc-label">{FIELD_LABELS[k] || k}</span>
+                        <span className="tc-value">{String(v)}</span>
+                      </div>
+                    ))}
+
+                    {/* ── Descripción e instrucciones ── */}
+                    {task.generalDescription && (
+                      <div className="tc-row tc-row-block">
+                        <span className="tc-label">Descripción del pedido</span>
+                        <span className="tc-value">{task.generalDescription}</span>
+                      </div>
+                    )}
+                    {task.userAction && (
+                      <div className="tc-row tc-row-block">
+                        <span className="tc-label">Acción esperada del usuario</span>
+                        <span className="tc-value">{task.userAction}</span>
+                      </div>
+                    )}
+                    {task.additionalComments && (
+                      <div className="tc-row tc-row-block">
+                        <span className="tc-label">Comentarios adicionales</span>
+                        <span className="tc-value">{task.additionalComments}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── Imágenes ── */}
+                  {images.length > 0 && (
+                    <div className="tc-files">
+                      <span className="tc-files-label">Imágenes adjuntas</span>
+                      <div className="tc-images">
+                        {images.map((url, idx) => (
+                          <a key={idx} href={url} target="_blank" rel="noopener noreferrer">
+                            <img src={url} alt={`Imagen ${idx + 1}`} className="tc-thumb" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Audio ── */}
+                  {(audios.length > 0 || audioUrl) && (
+                    <div className="tc-files">
+                      <span className="tc-files-label">Nota de voz</span>
+                      {audios.map((url, idx) => (
+                        <audio key={idx} src={url} controls className="tc-audio" />
+                      ))}
+                      {audioUrl && <audio src={audioUrl} controls className="tc-audio" />}
+                    </div>
+                  )}
+
+                  {/* ── Otros archivos ── */}
+                  {otherFiles.length > 0 && (
+                    <div className="tc-files">
+                      <span className="tc-files-label">Otros archivos</span>
+                      {otherFiles.map((url, idx) => (
+                        <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="tc-file-link">
+                          📄 Archivo {idx + 1}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ── Acciones ── */}
+                  {!(task.completed || task.canceled) && (
+                    <div className="tc-actions">
+                      <button className="tc-btn tc-btn-complete" onClick={() => completeTask(task.id)}>Completar</button>
+                      <button className="tc-btn tc-btn-cancel" onClick={() => cancelTask(task.id)}>Cancelar</button>
+                    </div>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }

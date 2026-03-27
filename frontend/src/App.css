@@ -176,38 +176,229 @@ body {
   background: #55677e;
 }
 
+/* ─── Tasks section ──────────────────────────────────────────────────── */
+
+.tasks-section {
+  margin-top: 32px;
+}
+
+.tasks-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a3f6f;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 0 0 14px;
+}
+
 .task-list {
   list-style: none;
   padding: 0;
   display: grid;
-  gap: 15px;
+  gap: 16px;
 }
+
+/* ─── Task card ──────────────────────────────────────────────────────── */
 
 .task-card {
   background: #fff;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(24, 49, 83, 0.09);
+  overflow: hidden;
+  border-left: 4px solid #0b69d1;
 }
 
-.task-card img {
-  margin-top: 10px;
-  max-width: 200px;
+.task-card.tc-done  { border-left-color: #16a34a; }
+.task-card.tc-cancelled { border-left-color: #dc2626; }
+
+.tc-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: #f4f8ff;
+  border-bottom: 1px solid #dde8f5;
+}
+
+.tc-piece-type {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1a3f6f;
+  flex: 1;
+}
+
+.tc-priority {
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: #e8f0fe;
+  color: #1a3f6f;
+}
+
+.tc-priority-urgente { background: #fde8e8; color: #b91c1c; }
+.tc-priority-alta    { background: #fff3cd; color: #92400e; }
+.tc-priority-normal  { background: #e8f0fe; color: #1a3f6f; }
+
+.tc-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.tc-status-done      { background: #dcfce7; color: #15803d; }
+.tc-status-cancelled { background: #fee2e2; color: #b91c1c; }
+
+/* ─── Body rows ──────────────────────────────────────────────────────── */
+
+.tc-body {
+  padding: 12px 16px;
+  display: grid;
+  gap: 6px;
+}
+
+.tc-row {
+  display: flex;
+  gap: 8px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  align-items: baseline;
+}
+
+.tc-row-block {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tc-label {
+  min-width: 180px;
+  font-weight: 700;
+  color: #374151;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.tc-row-block .tc-label {
+  min-width: unset;
+}
+
+.tc-value {
+  color: #1f2937;
+}
+
+.tc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tc-chip {
+  background: #e8f0fe;
+  color: #1a3f6f;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 9px;
+}
+
+/* ─── Files / media ──────────────────────────────────────────────────── */
+
+.tc-files {
+  padding: 10px 16px;
+  border-top: 1px solid #eef2f9;
+  display: grid;
+  gap: 8px;
+}
+
+.tc-files-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #4b6080;
+}
+
+.tc-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tc-thumb {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
   border-radius: 8px;
+  border: 1px solid #dde8f5;
+  transition: opacity .15s;
 }
 
-.task-card button {
-  margin-top: 10px;
-  background: #28a745;
-  color: white;
+.tc-thumb:hover { opacity: .85; }
+
+.tc-audio {
+  width: 100%;
+  max-width: 360px;
+  height: 38px;
+}
+
+.tc-file-link {
+  color: #0b69d1;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.tc-file-link:hover { text-decoration: underline; }
+
+/* ─── Actions ────────────────────────────────────────────────────────── */
+
+.tc-actions {
+  padding: 10px 16px;
+  border-top: 1px solid #eef2f9;
+  display: flex;
+  gap: 8px;
+}
+
+.tc-btn {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 7px 14px;
   border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 7px;
   cursor: pointer;
 }
 
-.task-card button:hover {
-  background: #218838;
+.tc-btn-complete { background: #16a34a; color: #fff; }
+.tc-btn-complete:hover { background: #15803d; }
+.tc-btn-cancel   { background: #dc2626; color: #fff; }
+.tc-btn-cancel:hover { background: #b91c1c; }
+
+/* ─── Toast notification ─────────────────────────────────────────────── */
+
+.toast-success {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #16a34a;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 14px 28px;
+  border-radius: 999px;
+  box-shadow: 0 4px 18px rgba(22, 163, 74, 0.35);
+  z-index: 9999;
+  white-space: nowrap;
+  animation: toast-in .25s ease;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 @media (max-width: 640px) {

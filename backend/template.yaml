@@ -140,10 +140,15 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "appgrafica-images-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        IgnorePublicAcls: false
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
       CorsConfiguration:
         CorsRules:
           - AllowedOrigins:
-              - "*"    # ⚠️ en producción conviene limitar al dominio del frontend
+              - "*"
             AllowedMethods:
               - PUT
               - GET
@@ -151,12 +156,25 @@ Resources:
             AllowedHeaders:
               - "*"
 
+  TaskImagesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TaskImagesBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action: "s3:GetObject"
+            Resource: !Sub "${TaskImagesBucket.Arn}/*"
+
   SendTaskEmailFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: send_task_email.handler
       Runtime: python3.12
       CodeUri: src/
+      Timeout: 60
+      MemorySize: 512
       Policies:
         - AmazonDynamoDBReadOnlyAccess
         - Statement:
