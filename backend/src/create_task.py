@@ -7,41 +7,82 @@ from datetime import datetime
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(os.environ["TABLE_NAME"])
 
+
+def _safe_str(value):
+    return value if isinstance(value, str) else ""
+
+
+def _safe_list(value):
+    return value if isinstance(value, list) else []
+
+
+def _safe_dict(value):
+    return value if isinstance(value, dict) else {}
+
+
+def _build_cors_headers():
+    return {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Content-Type": "application/json",
+    }
+
 def handler(event, context):
     try:
         body = json.loads(event.get("body", "{}"))
-        
-        task_id = str(uuid.uuid4())
+        form_data = _safe_dict(body.get("formData"))
+
+        full_name = _safe_str(body.get("responsible")) or _safe_str(form_data.get("fullName"))
+        area = _safe_str(body.get("area")) or _safe_str(form_data.get("area"))
+        due_date = _safe_str(body.get("dueDate")) or _safe_str(form_data.get("dueDate"))
+        priority = _safe_str(body.get("priority")) or _safe_str(form_data.get("priority")) or "Normal"
+        piece_type = _safe_str(body.get("pieceType")) or _safe_str(form_data.get("pieceType"))
+        channels = _safe_list(body.get("channels")) or _safe_list(form_data.get("channels"))
+        general_description = _safe_str(body.get("generalDescription")) or _safe_str(form_data.get("generalDescription"))
+        user_action = _safe_str(body.get("userAction")) or _safe_str(form_data.get("userAction"))
+        additional_comments = _safe_str(body.get("additionalComments")) or _safe_str(form_data.get("additionalComments"))
+        conditional_data = _safe_dict(body.get("conditionalData")) or _safe_dict(form_data.get("conditionalData"))
+
+        description = _safe_str(body.get("description"))
+        if not description:
+            description = f"{piece_type} - {general_description}".strip(" -")
+
         task_item = {
             "id": str(uuid.uuid4()),
-            "description": body.get("description", ""),
-            "responsible": body.get("responsible", ""),
-            "dueDate": body.get("dueDate", ""),
-            "notes": body.get("notes", ""),
-            "files": body.get("files", []),   # List of S3 URLs
-            "audio": body.get("audio", ""),   # URL de S3 (si viene del frontend)
+            "schemaVersion": 2,
+            "description": description,
+            "responsible": full_name,
+            "area": area,
+            "dueDate": due_date,
+            "priority": priority,
+            "pieceType": piece_type,
+            "channels": channels,
+            "generalDescription": general_description,
+            "userAction": user_action,
+            "additionalComments": additional_comments,
+            "conditionalData": conditional_data,
+            "notes": _safe_str(body.get("notes")),
+            "files": _safe_list(body.get("files")),
+            "audio": _safe_str(body.get("audio")),
+            "formData": form_data,
             "completed": False,
-            "createdAt": datetime.utcnow().isoformat()
+            "canceled": False,
+            "createdAt": datetime.utcnow().isoformat(),
+            "updatedAt": datetime.utcnow().isoformat(),
         }
 
-        # Guardar en DynamoDB
         table.put_item(Item=task_item)
 
         return {
-            "statusCode": 200,
-            "headers": {
-                "Access-Control-Allow-Origin": "*",  # <-- Habilita CORS
-                "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type"
-            },
+            "statusCode": 201,
+            "headers": _build_cors_headers(),
             "body": json.dumps(task_item)
         }
     except Exception as e:
         print(f"Error creating task: {e}")
         return {
             "statusCode": 500,
-            "headers": {
-                "Access-Control-Allow-Origin": "*"
-            },
+            "headers": _build_cors_headers(),
             "body": json.dumps({"error": "Failed to create task"})
         }
