@@ -189,11 +189,33 @@ function App() {
     }
 
     const summary = `${pieceType} - ${generalDescription.slice(0, 120)}`
+    const conditionalData = getConditionalDetails()
+    const formData = {
+      fullName,
+      area,
+      dueDate,
+      priority,
+      pieceType,
+      channels,
+      generalDescription,
+      userAction,
+      additionalComments,
+      conditionalData
+    }
 
     const taskData = {
       description: summary,
       responsible: fullName,
+      area,
       dueDate,
+      priority,
+      pieceType,
+      channels,
+      generalDescription,
+      userAction,
+      additionalComments,
+      conditionalData,
+      formData,
       notes: formatNotes(),
       completed: false,
       files: fileUrls
