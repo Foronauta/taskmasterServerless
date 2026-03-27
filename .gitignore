@@ -3,6 +3,7 @@
 
 # Node modules
 node_modules/
+backend/src/node_modules/
 
 # Build outputs
 frontend/dist/
